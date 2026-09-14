@@ -1,0 +1,41 @@
+{
+  "includeCoAuthoredBy": true,
+  "cleanupPeriodDays": 30,
+  "autoCompactEnabled": true,
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "TodoWrite",
+      "WebSearch",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git show:*)",
+      "Bash(ls:*)",
+      "Bash(pwd)",
+      "Bash(node --version)",
+      "Bash(npm --version)",
+      "Bash(python --version)",
+      "Bash(python3 --version)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(npm publish:*)",
+      "Bash(npm install:*)",
+      "Bash(pip install:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/.env)",
+      "Read(./**/*.pem)",
+      "Read(./**/id_rsa)",
+      "Read(./**/credentials.json)",
+      "Bash(curl:*://*|*sh*)"
+    ]
+  }
+}
