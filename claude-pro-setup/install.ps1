@@ -250,10 +250,26 @@ $dstSettings = Join-Path $ClaudeHome 'settings.json'
 function ConvertTo-Hashtable {
     param($InputObject)
     if ($null -eq $InputObject) { return $null }
-    if ($InputObject -is [System.Collections.IEnumerable] -and $InputObject -isnot [string]) {
+
+    # ATTENTION : ne jamais tester "-is [PSCustomObject]" ici. En PowerShell,
+    # presque tout objet satisfait ce test, y compris une chaine, car tout
+    # transite par un PSObject. Une chaine serait alors convertie en Hashtable
+    # et settings.json s'en trouverait corrompu. On teste le type reel.
+    $type = $InputObject.GetType()
+
+    if ($InputObject -is [string] -or $type.IsPrimitive -or
+        $InputObject -is [decimal] -or $InputObject -is [datetime]) {
+        return $InputObject
+    }
+    if ($InputObject -is [System.Collections.IDictionary]) {
+        $h = @{}
+        foreach ($k in @($InputObject.Keys)) { $h[$k] = ConvertTo-Hashtable $InputObject[$k] }
+        return $h
+    }
+    if ($InputObject -is [System.Collections.IEnumerable]) {
         return @($InputObject | ForEach-Object { ConvertTo-Hashtable $_ })
     }
-    if ($InputObject -is [PSCustomObject]) {
+    if ($type.FullName -eq 'System.Management.Automation.PSCustomObject') {
         $h = @{}
         foreach ($p in $InputObject.PSObject.Properties) { $h[$p.Name] = ConvertTo-Hashtable $p.Value }
         return $h

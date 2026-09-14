@@ -25,21 +25,32 @@ Ce qui a donc été fait :
 Ce que vous devez faire : lancer `install.ps1`. C'est la seule étape qui ne
 pouvait pas être exécutée à votre place.
 
-### Limite à connaître : les scripts PowerShell n'ont pas pu être exécutés
+### Les scripts PowerShell ont été réellement exécutés
 
-**PowerShell n'est pas installé dans l'environnement de préparation.** Les scripts
-`.ps1` ont donc été :
+PowerShell 7.4.6 a été installé dans l'environnement de préparation afin de tester
+les `.ps1` pour de vrai, et non seulement par relecture. Ce qui a été exécuté :
 
-- écrits en miroir exact des scripts `.sh`, eux **exécutés et testés** (installation,
-  relance à vide, test négatif d'échec de sauvegarde) ;
-- relus ligne à ligne, avec correction d'un bug réel de portée de variable
-  (voir « Revue de sécurité » plus bas) ;
-- contrôlés structurellement (équilibre des accolades, parenthèses, crochets,
-  chaînes et commentaires).
+| Test | Résultat |
+|---|---|
+| Analyse syntaxique des 4 scripts par le parseur PowerShell | 0 erreur |
+| `install.ps1 -DryRun` sur profil vierge | aucune écriture, sortie conforme |
+| `install.ps1` sur profil vierge | 29 fichiers Skills, 10 agents, 3 commandes copiés |
+| `install.ps1` sur configuration **existante** | 10 contrôles de non-destruction passés |
+| `install.ps1` relancé (idempotence) | 0 ajout, 0 remplacement, tout conservé |
+| Test négatif : sauvegarde impossible | arrêt code 1 **avant** toute modification, `settings.json` intact |
+| `verify.ps1` | 19 PASS, 0 WARNING, 0 FAIL |
+| `setup-plugins.ps1` | 4/4 plugins confirmés |
+| `setup-mcp.ps1` | Playwright `Connected` |
 
-Ce n'est **pas** équivalent à une exécution. D'où la consigne : **lancez d'abord
-`.\install.ps1 -DryRun`**. En simulation, le script n'écrit rien et vous verrez
-immédiatement s'il se comporte correctement chez vous.
+Ces tests ont révélé un défaut critique que la relecture seule n'avait pas vu
+(voir « Revue de sécurité » ci-dessous). Il est corrigé et vérifié.
+
+Réserve honnête : les tests ont tourné sous PowerShell **Linux**. Le moteur, la
+syntaxe et la logique sont les mêmes que sous Windows ; ce qui n'a pas pu être
+exercé est spécifique à Windows — les ACL du dossier de sauvegarde (`Get-Acl` /
+`Set-Acl`, entourées d'un `try/catch` qui dégrade en avertissement) et les chemins
+à antislash. **Lancez tout de même `.\install.ps1 -DryRun` en premier** : c'est
+dix secondes, et le script n'écrit rien.
 
 ---
 
@@ -108,13 +119,15 @@ Puis **redémarrez Claude Code** pour charger la configuration.
 ## Revue de sécurité des installateurs
 
 Les scripts s'exécutent sur votre machine et manipulent vos fichiers. Ils ont été
-audités ; trois défauts ont été trouvés et corrigés.
+audités puis exécutés ; **quatre défauts** ont été trouvés et corrigés. Le plus
+grave n'a été révélé que par l'exécution réelle, pas par la relecture.
 
 | Défaut | Gravité | Correction |
 |---|---|---|
 | `install.sh` : échec de sauvegarde silencieux (`2>/dev/null`, aucun contrôle). La configuration pouvait être modifiée **sans sauvegarde**, ce qui annulait la garantie principale du script. | Élevée | Contrôle du code de retour de `mkdir` et `cp`, plus vérification que le dossier n'est pas vide. Arrêt immédiat sinon. Vérifié par test négatif. |
 | `install.ps1` : `Copy-Tree` passait un bloc de script à `Invoke-Action`, qui l'exécutait via `& $Action`. Le bloc y référençait `$_`, variable **automatique de pipeline** non liée hors de son pipeline : la copie des Skills et agents pouvait ne rien copier. | Élevée | L'indirection par bloc de script a été supprimée. La copie se fait dans une boucle `foreach` explicite, avec vérification de l'existence du fichier après copie. |
 | Dossier de sauvegarde créé en `0755` alors qu'il contient `.claude.json` (données de compte). Sur un poste partagé, son contenu était listable. | Moyenne | `chmod 700` sur Linux/macOS ; ACL sans héritage, limitée au compte courant, sur Windows. |
+| `install.ps1` : `ConvertTo-Hashtable` testait `-is [PSCustomObject]`. En PowerShell, **presque tout objet satisfait ce test**, y compris une chaîne, car tout transite par un `PSObject`. Chaque chaîne de permission était donc convertie en `Hashtable` : `settings.json` aurait été écrit **corrompu** (permissions en objets vides au lieu de chaînes), et l'union des permissions réduisait 16 entrées à 1. | **Critique** | Test sur le type réel (`.GetType()`) avec traitement explicite des chaînes, primitives, dictionnaires, tableaux, puis `PSCustomObject`. Vérifié : `allow`=16, `ask`=4, `deny`=7, toutes de type chaîne. |
 
 Aucun secret n'est écrit, lu ou transmis par ces scripts. Aucune connexion réseau
 n'est établie par `install.ps1` / `install.sh` — seuls `setup-plugins` et
