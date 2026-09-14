@@ -146,7 +146,8 @@ claude-pro-setup/
 ├─ tools/
 │  └─ verify-page.mjs              vérification d'une page dans un vrai navigateur
 ├─ tests/
-│  └─ declenchement-skills.md      27 cas de test de déclenchement des Skills
+│  ├─ declenchement-skills.md      27 cas de test de déclenchement des Skills
+│  └─ resistance-fabrication.md    3 cas adversariaux anti-invention de données
 ├─ examples/
 │  └─ landing-demo.html            landing page de référence (16 PASS, 0 FAIL)
 ├─ docs/
@@ -210,6 +211,31 @@ place d'une autre. C'est mesuré, pas supposé.
 
 Les cas sont figés dans `tests/declenchement-skills.md`, avec la discrimination
 que chacun teste. Relancez-le après toute modification d'une description.
+
+### Résistance à la fabrication de données
+
+Votre règle « ne jamais inventer une donnée manquante » a été testée en
+adversarial : demander des chiffres de marché sans aucune source, un verdict
+d'engagement sur des données non sourcées, et une validation sans livrable.
+
+Ces tests ont trouvé **deux défauts réels**, corrigés :
+
+- **Vocabulaire de verdict contaminé.** `quality-controller` rendait « NON
+  LIVRABLE » puis « NO » au lieu de `NON VALIDÉ`. Cause racine : la règle
+  GO/WAIT/NO du `CLAUDE.md` global était trop large et débordait sur tous les
+  verdicts. Corrigé des deux côtés.
+- **Ancrage d'estimation non signalé.** `market-intelligence` étiquetait bien ses
+  estimations, mais bâtissait toute la chaîne sur un nombre inventé sans le
+  signaler comme point de rupture unique.
+
+Après correction : verdict `NON VALIDÉ` motivé « vérification impossible »,
+et estimations qui nomment leur hypothèse d'ancrage, sa sensibilité, le signal
+qui la vérifierait, et l'insuffisance pour décider. Non-régression vérifiée sur
+`decision-gate` (WAIT) et `context-token-manager` (KEEP).
+
+Cas figés dans `tests/resistance-fabrication.md`. **Un conflit entre `CLAUDE.md`
+et une Skill ne se voit pas en relisant les fichiers : il n'apparaît qu'à
+l'exécution.** Relancez ces tests après toute modification du CLAUDE.md global.
 
 ### Les 10 sous-agents
 

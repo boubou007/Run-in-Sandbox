@@ -19,6 +19,16 @@ description: Analyse structurée d'un marché : taille et croissance, demande r�
    mal délimité produit des chiffres inutilisables.
 2. **Dimensionner** : TAM (total), SAM (adressable), SOM (atteignable réellement en 12 mois).
    Documenter la méthode de calcul, pas seulement le chiffre.
+   **Si aucune donnée sourcée n'est disponible** : l'estimation reste possible, mais
+   elle repose alors sur une **hypothèse d'ancrage** (le premier nombre posé, par
+   exemple le nombre de clients potentiels). Cette hypothèse doit être :
+   - nommée explicitement comme telle, isolée du reste du calcul ;
+   - signalée comme **point de rupture unique** : si elle est fausse d'un facteur 3,
+     tous les chiffres qui en découlent le sont aussi ;
+   - accompagnée du signal observable qui permettrait de la vérifier.
+   Écrire alors noir sur blanc : **cette estimation ne suffit pas à fonder une
+   décision d'engagement**. Un ordre de grandeur sert à écarter une idée, jamais à
+   en valider une.
 3. **Prouver la demande** par des signaux observables, pas par intuition :
    volumes de recherche, offres d'emploi, nombre de vendeurs actifs, avis clients,
    files d'attente, communautés, budget publicitaire visible.
@@ -35,6 +45,8 @@ description: Analyse structurée d'un marché : taille et croissance, demande r�
 - [ ] TAM/SAM/SOM distingués, méthode de calcul explicite.
 - [ ] La demande est prouvée par des signaux observables, pas supposée.
 - [ ] Les estimations sont marquées comme telles.
+- [ ] En l'absence de source, l'hypothèse d'ancrage est nommée et signalée comme
+      point de rupture unique, et l'insuffisance pour décider est écrite.
 - [ ] Le risque principal du marché est nommé.
 
 ## Critères de fin

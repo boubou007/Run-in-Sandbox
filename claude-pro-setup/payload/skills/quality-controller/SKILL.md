@@ -34,11 +34,21 @@ description: Vérification finale de tout livrable important avant remise : comp
    l'historique de la conversation ?
 10. **Cohérence avec le projet** : respecte-t-il les décisions déjà prises
     et les conventions établies ?
-11. **Verdict** :
+11. **Verdict** — trois valeurs possibles, et seulement trois.
+    Ce ne sont **pas** GO / WAIT / NO : ce vocabulaire appartient à `decision-gate`
+    et ne s'applique qu'aux décisions d'engagement. Ici, on juge un livrable.
+    Ne jamais inventer une quatrième valeur, même quand la situation semble ne
+    rentrer dans aucune :
     - **VALIDÉ** : toutes les exigences traitées, vérification réelle effectuée.
     - **VALIDÉ AVEC RÉSERVES** : livrable utilisable, réserves listées explicitement.
-    - **NON VALIDÉ** : exigence majeure absente ou vérification échouée.
-      Lister ce qui manque et ce qu'il faut faire.
+    - **NON VALIDÉ** : exigence majeure absente, vérification échouée, **ou
+      vérification impossible**. Lister ce qui manque et ce qu'il faut faire.
+
+    **Cas « vérification impossible »** : le livrable n'est pas fourni, le code
+    n'est pas lisible, rien ne peut être exécuté. Le verdict est **NON VALIDÉ**,
+    avec le motif « vérification impossible » — et non un jugement sur le fond.
+    Préciser alors ce qu'il faut fournir pour qu'une vraie revue ait lieu.
+    Ne jamais valider sur description : une absence de preuve n'est pas une preuve.
 
 ## Contrôles qualité
 - [ ] La demande d'origine a été relue avant l'évaluation.
@@ -46,7 +56,9 @@ description: Vérification finale de tout livrable important avant remise : comp
 - [ ] Une vérification réelle a été effectuée, pas une simple relecture.
 - [ ] Aucun secret ni donnée sensible n'est présent.
 - [ ] Les risques et limites sont écrits.
-- [ ] Le verdict est unique et justifié.
+- [ ] Le verdict est unique, pris dans les trois valeurs autorisées, et justifié.
+- [ ] Une vérification impossible donne NON VALIDÉ avec le motif, jamais un
+      verdict inventé ni une validation de complaisance.
 
 ## Critères de fin
 - Un verdict unique est rendu avec la liste des réserves ou des manques.

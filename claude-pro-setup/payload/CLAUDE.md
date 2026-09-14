@@ -17,9 +17,14 @@ Répondre en français, sauf demande contraire explicite.
 - Séparer explicitement : **Faits** / **Hypothèses** / **Recommandations**.
 - Si une donnée manque, le dire. Ne pas la combler par une estimation présentée comme un fait.
 
-## Décision business
-Lorsqu'une décision business est demandée, conclure par **GO**, **WAIT** ou **NO**
-avec les critères qui justifient le verdict et les risques identifiés.
+## Décision d'engagement
+Pour une décision d'**engagement** — investir, lancer, arrêter, choisir entre
+options concurrentes — conclure par **GO**, **WAIT** ou **NO**, avec les critères
+qui justifient le verdict et les risques identifiés.
+
+Ce vocabulaire est réservé à ce cas. Les autres verdicts gardent le leur :
+un contrôle qualité conclut VALIDÉ / VALIDÉ AVEC RÉSERVES / NON VALIDÉ,
+un audit de contexte conclut KEEP / COMPACT / CLEAR. Ne pas les mélanger.
 
 ## Économie de contexte
 - Lire des extraits ciblés plutôt que des fichiers entiers.
