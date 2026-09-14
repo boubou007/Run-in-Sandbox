@@ -145,6 +145,8 @@ claude-pro-setup/
 ├─ setup-mcp.ps1     / .sh         MCP sans authentification + test de connexion
 ├─ tools/
 │  └─ verify-page.mjs              vérification d'une page dans un vrai navigateur
+├─ tests/
+│  └─ declenchement-skills.md      27 cas de test de déclenchement des Skills
 ├─ examples/
 │  └─ landing-demo.html            landing page de référence (16 PASS, 0 FAIL)
 ├─ docs/
@@ -190,6 +192,24 @@ claude-pro-setup/
 
 Chaque Skill contient : déclencheurs, conditions de non-usage, procédure,
 contrôles qualité, critères de fin et format de livrable.
+
+### Qualité de déclenchement : 27 / 27
+
+Une Skill inutile est une Skill qui ne se déclenche pas, ou qui se déclenche à la
+place d'une autre. C'est mesuré, pas supposé.
+
+- Audit structurel : les 6 sections obligatoires présentes dans les 27 Skills,
+  descriptions entre 315 et 483 caractères, **aucun recouvrement** détecté entre
+  descriptions (indice de Jaccard maximal sous le seuil), aucun renvoi croisé cassé.
+- Audit comportemental : **27 scénarios sur 27** déclenchent la bonne Skill,
+  dont 10 cas volontairement ambigus (`design-system` vs `web-design-pro` vs
+  `ui-ux-audit`, `competitive-intelligence` vs `market-intelligence`,
+  `copywriting-pro` vs `social-media-strategist`, `trend-radar` vs
+  `market-intelligence`). Le cas « créer un site vitrine » choisit bien
+  `web-design-pro` et non le plugin `frontend-design` : pas de collision.
+
+Les cas sont figés dans `tests/declenchement-skills.md`, avec la discrimination
+que chacun teste. Relancez-le après toute modification d'une description.
 
 ### Les 10 sous-agents
 
