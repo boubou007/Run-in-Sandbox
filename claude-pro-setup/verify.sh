@@ -53,7 +53,7 @@ fi
 
 # --- structure
 MISSING=""
-for d in skills agents rules backups logs templates; do
+for d in skills agents rules backups logs templates commands; do
   [ -d "$CLAUDE_HOME/$d" ] || MISSING="$MISSING $d"
 done
 if [ -z "$MISSING" ]; then row PASS "Structure .claude" "skills, agents, rules, backups, logs, templates"
@@ -120,6 +120,13 @@ if command -v claude >/dev/null 2>&1; then
 else
   row WARNING "MCP" "non verifiable : CLI absente"
 fi
+
+# --- commandes
+CC=0
+[ -d "$CLAUDE_HOME/commands" ] && CC=$(find "$CLAUDE_HOME/commands" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+if [ "$CC" -ge 3 ]; then row PASS "Commandes slash" "$CC commande(s) : /token-audit, /reprise, /sauvegarde-memoire"
+elif [ "$CC" -gt 0 ]; then row WARNING "Commandes slash" "$CC commande(s) (3 attendues)"
+else row FAIL "Commandes slash" "aucune commande detectee"; fi
 
 # --- memoire
 if [ -f "$CLAUDE_HOME/templates/memoire-projet.md" ]; then

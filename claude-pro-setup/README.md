@@ -87,19 +87,35 @@ Puis **redémarrez Claude Code** pour charger la configuration.
 
 ```
 claude-pro-setup/
-├─ install.ps1 / install.sh     installateurs
-├─ verify.ps1  / verify.sh      audit post-installation (PASS/WARNING/FAIL)
+├─ install.ps1 / install.sh        installateurs
+├─ verify.ps1  / verify.sh         audit post-installation (PASS/WARNING/FAIL)
+├─ setup-plugins.ps1 / .sh         marketplace + plugins, en une commande
+├─ setup-mcp.ps1     / .sh         MCP sans authentification + test de connexion
+├─ tools/
+│  └─ verify-page.mjs              vérification d'une page dans un vrai navigateur
+├─ examples/
+│  └─ landing-demo.html            landing page de référence (16 PASS, 0 FAIL)
 ├─ docs/
-│  ├─ PLUGINS.md                catalogue réel et commandes vérifiées
-│  └─ MCP.md                    serveurs MCP, authentification, impact contexte
+│  ├─ PLUGINS.md                   catalogue réel et commandes vérifiées
+│  ├─ MCP.md                       serveurs MCP, authentification, impact contexte
+│  └─ VERIFICATION-VISUELLE.md     outil de contrôle navigateur et ses pièges
 └─ payload/
-   ├─ CLAUDE.md                 instructions globales (45 lignes, volontairement court)
-   ├─ settings.json             clés vérifiées contre le binaire Claude Code
-   ├─ skills/                   27 Skills
-   ├─ agents/                   10 sous-agents
-   ├─ rules/                    règles chargées à la demande
-   └─ templates/                modèles de mémoire et de CLAUDE.md projet
+   ├─ CLAUDE.md                    instructions globales (45 lignes, volontairement court)
+   ├─ settings.json                clés vérifiées contre le binaire Claude Code
+   ├─ skills/                      27 Skills
+   ├─ agents/                      10 sous-agents
+   ├─ commands/                    3 commandes slash
+   ├─ rules/                       règles chargées à la demande
+   └─ templates/                   modèles de mémoire et de CLAUDE.md projet
 ```
+
+### Commandes slash installées
+
+| Commande | Effet |
+|---|---|
+| `/token-audit` | Audit du contexte, verdict KEEP / COMPACT / CLEAR |
+| `/reprise` | Résumé de reprise du projet depuis la mémoire |
+| `/sauvegarde-memoire` | Enregistre état, décisions et erreurs de la session |
 
 ### Les 27 Skills
 
@@ -133,29 +149,39 @@ contrôles qualité, critères de fin et format de livrable.
 
 ## Après l'installation
 
-### Plugins (commandes vérifiées)
+### Plugins — une commande
 
 ```powershell
-claude plugin marketplace add anthropics/claude-code
-claude plugin install frontend-design@claude-code-plugins
-claude plugin install feature-dev@claude-code-plugins
-claude plugin install code-review@claude-code-plugins
-claude plugin install plugin-dev@claude-code-plugins
-claude plugin list
+.\setup-plugins.ps1              # marketplace officielle + 4 plugins recommandes
+.\setup-plugins.ps1 -Optional    # + commit-commands, security-guidance, pr-review-toolkit
 ```
 
-Détails et correspondance avec votre demande initiale : `docs/PLUGINS.md`.
+Le script est idempotent et **vérifie réellement** que chaque plugin apparaît
+comme installé avant de conclure. Détails et correspondance avec votre demande
+initiale : `docs/PLUGINS.md`.
 
-### MCP (commandes vérifiées)
+### MCP — une commande
 
 ```powershell
-claude mcp add playwright -s user -- npx -y @playwright/mcp@latest
-claude mcp add chrome-devtools -s user -- npx -y chrome-devtools-mcp@latest
-claude mcp list
+.\setup-mcp.ps1                  # playwright + test de connexion reel
+.\setup-mcp.ps1 -WithDevTools    # + chrome-devtools
 ```
 
-Les serveurs nécessitant une authentification (GitHub, Figma, Supabase, Context7)
-sont documentés dans `docs/MCP.md` : ces connexions exigent votre intervention.
+Seuls les serveurs **sans authentification** sont automatisés. GitHub, Figma,
+Supabase et Context7 exigent votre intervention (OAuth ou clé) : commandes
+exactes dans `docs/MCP.md`. Context7 a été testé : il **requiert une clé API**.
+
+### Vérification visuelle d'une page
+
+```powershell
+npm install -g playwright && npx playwright install chromium
+node tools\verify-page.mjs http://localhost:8099/ma-page.html .\verification
+```
+
+16 contrôles : responsive, accessibilité, console, mode sombre, captures desktop
+et mobile. Voir `docs/VERIFICATION-VISUELLE.md`, qui documente aussi un piège
+important : les captures pleine page peuvent afficher du **texte fantôme** quand
+la page utilise `backdrop-filter`. Confirmez toujours dans le DOM avant de corriger.
 
 ### Mémoire projet
 

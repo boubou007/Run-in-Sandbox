@@ -62,7 +62,7 @@ step '2/7  Sauvegarde horodatee'
 BACKED_UP=0
 if [ -d "$CLAUDE_HOME" ]; then
   TO_BACKUP=()
-  for item in CLAUDE.md settings.json settings.local.json skills agents rules templates; do
+  for item in CLAUDE.md settings.json settings.local.json skills agents rules templates commands; do
     [ -e "$CLAUDE_HOME/$item" ] && TO_BACKUP+=("$CLAUDE_HOME/$item")
   done
   [ -f "$HOME/.claude.json" ] && TO_BACKUP+=("$HOME/.claude.json")
@@ -86,7 +86,7 @@ fi
 
 # ------------------------------------------------------------ 3. structure
 step '3/7  Creation de la structure'
-for d in skills agents rules backups logs templates; do
+for d in skills agents rules backups logs templates commands; do
   if [ -d "$CLAUDE_HOME/$d" ]; then
     info "$d/ existe deja"
   elif [ "$DRY_RUN" = 1 ]; then
@@ -127,6 +127,7 @@ copy_tree "$PAYLOAD/skills"    "$CLAUDE_HOME/skills"    'skills'
 copy_tree "$PAYLOAD/agents"    "$CLAUDE_HOME/agents"    'agents'
 copy_tree "$PAYLOAD/rules"     "$CLAUDE_HOME/rules"     'rules'
 copy_tree "$PAYLOAD/templates" "$CLAUDE_HOME/templates" 'templates'
+copy_tree "$PAYLOAD/commands"  "$CLAUDE_HOME/commands"  'commands'
 
 # ------------------------------------------------------------ 5. CLAUDE.md
 step '5/7  CLAUDE.md global'

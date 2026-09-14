@@ -69,6 +69,25 @@ Référence chargée à la demande. Ne pas recopier dans SKILL.md.
 - [ ] Page ouverte dans un vrai navigateur (Playwright ou Chrome DevTools MCP).
 - [ ] Capture desktop 1440 px.
 - [ ] Capture mobile 390 px.
+- [ ] Capture en mode sombre si le thème est implémenté.
 - [ ] Console sans erreur ni avertissement bloquant.
 - [ ] Survol et focus vérifiés sur les éléments interactifs.
 - [ ] Formulaires soumis au moins une fois, cas d'erreur inclus.
+
+### Pièges de la vérification par capture d'écran
+Une capture n'est pas une preuve brute : elle peut mentir. Avant de « corriger »
+un défaut vu sur une image, vérifiez qu'il existe dans le DOM.
+
+- [ ] **`backdrop-filter` + capture pleine page** : un en-tête collant flouté
+      produit du **texte fantôme** dupliqué à des endroits arbitraires de la
+      capture `fullPage`. C'est un artefact de rendu, pas un défaut de la page.
+      Recoupez toujours avec une capture **viewport seule** avant d'agir.
+- [ ] **`position: sticky` en capture pleine page** : l'élément peut apparaître
+      dupliqué ou mal positionné. Même remède.
+- [ ] **Polices web** : une capture prise avant le chargement des polices montre
+      le repli. Attendre `networkidle` ou `document.fonts.ready`.
+- [ ] **Animations d'entrée** : une capture immédiate fige des éléments en état
+      initial (opacité 0, décalage). Attendre la fin, ou désactiver via
+      `prefers-reduced-motion`.
+- [ ] Règle générale : un défaut visible sur une capture doit être **confirmé dans
+      le DOM** (position réelle, styles calculés) avant toute modification de code.

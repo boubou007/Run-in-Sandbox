@@ -93,14 +93,15 @@ claude mcp add --transport http context7 -s user https://mcp.context7.com/mcp
 
 - **Fonction** : documentation de bibliothèques à jour, contre les APIs obsolètes.
 - **Origine** : Upstash.
-- **Authentification** : une clé API peut être requise selon l'offre. Si l'accès
-  est refusé, créez un compte sur context7.com et ajoutez l'en-tête :
+- **Authentification** : **requise — vérifié.** Ajouté sans clé, le serveur répond
+  `! Needs authentication` sur `claude mcp list`. Créez un compte sur context7.com,
+  puis ajoutez l'en-tête :
   ```powershell
   claude mcp add --transport http context7 -s user https://mcp.context7.com/mcp --header "CONTEXT7_API_KEY: VOTRE_CLE"
   ```
 - **Impact contexte** : faible (peu d'outils).
-- **Statut** : non testé dans l'environnement de préparation. À vérifier chez vous
-  avec `claude mcp list`.
+- **Statut vérifié** : ajouté avec succès, mais `! Needs authentication` sans clé.
+  Le serveur n'est donc pas utilisable tant que vous n'avez pas fourni la vôtre.
 
 ## 5. Figma
 
@@ -127,6 +128,31 @@ claude mcp add supabase -s user -e SUPABASE_ACCESS_TOKEN=VOTRE_JETON -- npx -y @
   préférence un jeton limité à un projet de développement, et ajoutez
   `--read-only` si le paquet le propose pour vos usages de consultation.
 - **Statut** : non testé ici (jeton requis).
+
+---
+
+## Piège connu : Playwright MCP et le canal navigateur
+
+Par défaut, `@playwright/mcp` cherche **Google Chrome installé sur le système**.
+Sur une machine sans Chrome (conteneur, poste sous Chromium seul), il échoue avec :
+
+```
+Chromium distribution 'chrome' is not found at /opt/google/chrome/chrome
+```
+
+Ce n'est pas un défaut de configuration : c'est le canal par défaut. Deux remèdes :
+
+```powershell
+# a) utiliser le Chromium fourni par Playwright plutot que Chrome
+claude mcp remove playwright
+claude mcp add playwright -s user -- npx -y @playwright/mcp@latest --browser chromium
+
+# b) ou installer le canal Chrome
+npx playwright install chrome
+```
+
+Sur un poste Windows où Chrome est installé, la configuration par défaut fonctionne
+sans modification. Le problème ne se pose que sur des environnements sans Chrome.
 
 ---
 
@@ -157,6 +183,6 @@ Un serveur ajouté mais non connecté ne fonctionne pas.
 | playwright | Pilotage navigateur | Microsoft | aucune | moyen | **Testé ✅ Connected** |
 | chrome-devtools | Perf, réseau, console | Google | aucune | moyen | **Testé ✅ Connected** |
 | github | Dépôts, PR, issues | GitHub | OAuth / jeton | élevé | Action manuelle requise |
-| context7 | Documentation à jour | Upstash | clé possible | faible | À vérifier chez vous |
+| context7 | Documentation à jour | Upstash | **clé requise (vérifié)** | faible | Ajouté, `Needs authentication` |
 | figma | Design, composants | Figma | OAuth | moyen | Action manuelle requise |
 | supabase | Base de données | Supabase | jeton | élevé | Action manuelle requise |

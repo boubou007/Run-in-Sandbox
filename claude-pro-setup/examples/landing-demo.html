@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relance — facturation et relances pour indépendants</title>
+<meta name="description" content="Relance émet vos factures et relance vos clients en retard, tout seul. Pour les indépendants qui veulent être payés sans courir après leur argent.">
+<style>
+/* ---- Jetons : palette claire par defaut, redefinie en sombre ---- */
+:root{
+  color-scheme: light;
+  --bg:#fbfaf7; --surface:#ffffff; --surface-2:#f4f2ec;
+  --text:#1a1917; --text-muted:#5c584f; --border:#e3ded2;
+  --accent:#1f4d3d; --accent-text:#ffffff; --accent-soft:#e8f0ea;
+  --warn:#8a4b12;
+  --shadow:0 1px 2px rgba(26,25,23,.06), 0 8px 24px -12px rgba(26,25,23,.18);
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:72px; --s9:104px;
+  --font:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-ui:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#141613; --surface:#1b1e1a; --surface-2:#232722;
+    --text:#eceae4; --text-muted:#a8a79f; --border:#32372f;
+    --accent:#8fd4b0; --accent-text:#0d1310; --accent-soft:#1f2a24;
+    --warn:#e0a35f;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#141613; --surface:#1b1e1a; --surface-2:#232722;
+  --text:#eceae4; --text-muted:#a8a79f; --border:#32372f;
+  --accent:#8fd4b0; --accent-text:#0d1310; --accent-soft:#1f2a24;
+  --warn:#e0a35f;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:var(--font-ui); font-size:17px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;height:auto}
+.wrap{width:100%;max-width:1120px;margin-inline:auto;padding-inline:20px}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:var(--r-sm)}
+
+.skip{position:absolute;left:-9999px;top:0;background:var(--accent);color:var(--accent-text);padding:var(--s3) var(--s4);z-index:99}
+.skip:focus{left:var(--s4);top:var(--s4)}
+
+/* ---- Header ---- */
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.nav{display:flex;align-items:center;gap:var(--s5);min-height:64px}
+.logo{font-family:var(--font);font-size:21px;font-weight:600;letter-spacing:-.01em;text-decoration:none;margin-right:auto;display:inline-flex;align-items:center;gap:var(--s2);min-height:44px}
+.logo .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:none}
+.nav-links{display:flex;gap:var(--s5);list-style:none;margin:0;padding:0}
+.nav-links a{color:var(--text-muted);text-decoration:none;font-size:15px;display:inline-flex;align-items:center;min-height:44px}
+.nav-links a:hover{color:var(--text)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);
+  min-height:44px;padding:0 var(--s5);border-radius:var(--r-md);border:1px solid transparent;
+  font:inherit;font-size:15px;font-weight:600;text-decoration:none;cursor:pointer;
+  transition:transform .15s ease, background-color .15s ease}
+.btn-primary{background:var(--accent);color:var(--accent-text)}
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--text);border-color:var(--border)}
+.btn-lg{min-height:52px;font-size:16px;padding:0 var(--s6)}
+
+/* ---- Hero ---- */
+.hero{padding-block:var(--s7) var(--s6)}
+.eyebrow{display:inline-block;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--accent);background:var(--accent-soft);padding:var(--s1) var(--s3);border-radius:999px;margin-bottom:var(--s4)}
+h1{font-family:var(--font);font-size:clamp(34px,6vw,60px);line-height:1.08;letter-spacing:-.02em;margin:0 0 var(--s4);max-width:16ch}
+.lede{font-size:clamp(17px,2.2vw,21px);color:var(--text-muted);max-width:54ch;margin:0 0 var(--s6)}
+.cta-row{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center}
+.cta-note{font-size:14px;color:var(--text-muted)}
+
+/* ---- Preuve ---- */
+.proof{border-block:1px solid var(--border);padding-block:var(--s5)}
+.proof p{margin:0;font-size:14px;color:var(--text-muted);text-align:center}
+.proof strong{color:var(--text)}
+
+/* ---- Sections ---- */
+section{padding-block:var(--s7)}
+h2{font-family:var(--font);font-size:clamp(26px,3.6vw,38px);line-height:1.15;letter-spacing:-.015em;margin:0 0 var(--s3);max-width:20ch}
+.section-lede{color:var(--text-muted);max-width:58ch;margin:0 0 var(--s6)}
+
+.grid{display:grid;gap:var(--s4)}
+@media (min-width:760px){ .grid-3{grid-template-columns:repeat(3,1fr)} }
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s5);box-shadow:var(--shadow)}
+.card h3{font-size:18px;margin:0 0 var(--s2);letter-spacing:-.01em}
+.card p{margin:0;color:var(--text-muted);font-size:15px}
+.card .num{font-family:var(--font);font-size:13px;color:var(--accent);font-weight:600;display:block;margin-bottom:var(--s3)}
+
+/* ---- Tarifs ---- */
+.plans{display:grid;gap:var(--s4)}
+@media (min-width:760px){ .plans{grid-template-columns:repeat(2,1fr);align-items:start} }
+.plan{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s6)}
+.plan.featured{border-color:var(--accent);box-shadow:var(--shadow);position:relative}
+.plan .tag{position:absolute;top:calc(-1 * var(--s3));left:var(--s6);background:var(--accent);color:var(--accent-text);
+  font-size:12px;font-weight:600;padding:var(--s1) var(--s3);border-radius:999px}
+.price{font-family:var(--font);font-size:42px;line-height:1;margin:var(--s3) 0 var(--s1)}
+.price span{font-family:var(--font-ui);font-size:15px;color:var(--text-muted);font-weight:400}
+.plan ul{list-style:none;margin:var(--s5) 0;padding:0;display:grid;gap:var(--s3)}
+.plan li{font-size:15px;color:var(--text-muted);padding-left:26px;position:relative}
+.plan li::before{content:"";position:absolute;left:0;top:9px;width:14px;height:7px;border-left:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:rotate(-45deg)}
+
+/* ---- FAQ ---- */
+details{border-bottom:1px solid var(--border);padding-block:var(--s4)}
+summary{cursor:pointer;font-weight:600;font-size:16px;list-style:none;display:flex;justify-content:space-between;gap:var(--s4);min-height:32px;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-size:22px;color:var(--accent);line-height:1;flex:none}
+details[open] summary::after{content:"\2212"}
+details p{margin:var(--s3) 0 0;color:var(--text-muted);font-size:15px;max-width:62ch}
+
+/* ---- CTA final ---- */
+.final{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s7) var(--s5);text-align:center;margin-block:var(--s6)}
+.final h2{margin-inline:auto}
+.final .cta-row{justify-content:center}
+
+footer{border-top:1px solid var(--border);padding-block:var(--s5);font-size:14px;color:var(--text-muted)}
+.foot{display:flex;flex-wrap:wrap;gap:var(--s4);align-items:center;justify-content:space-between}
+footer a{color:var(--text-muted);display:inline-block;padding-block:var(--s3)}
+
+@media (max-width:560px){
+  .nav-links{display:none}
+  .hero{padding-block:var(--s6) var(--s5)}
+  .btn{width:100%}
+  .cta-row{flex-direction:column;align-items:stretch}
+  .cta-note{text-align:center}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="#"><span class="dot" aria-hidden="true"></span>Relance</a>
+    <nav aria-label="Navigation principale">
+      <ul class="nav-links">
+        <li><a href="#comment">Comment ça marche</a></li>
+        <li><a href="#tarifs">Tarifs</a></li>
+        <li><a href="#faq">Questions</a></li>
+      </ul>
+    </nav>
+    <a class="btn btn-primary" href="#essai">Essayer 30 jours</a>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap">
+
+    <section class="hero">
+      <span class="eyebrow">Pour indépendants</span>
+      <h1>Vos factures se relancent toutes seules.</h1>
+      <p class="lede">Relance émet vos factures, surveille les échéances et relance vos clients en retard à votre place — avec le ton que vous auriez employé, sans la gêne de le faire vous-même.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary btn-lg" href="#essai">Commencer l'essai gratuit</a>
+        <a class="btn btn-ghost btn-lg" href="#comment">Voir comment ça marche</a>
+      </div>
+      <p class="cta-note">30 jours, sans carte bancaire. Export de vos données à tout moment.</p>
+    </section>
+
+    <div class="proof">
+      <p>Délai moyen de paiement constaté chez nos utilisateurs : <strong>de 47 à 29 jours</strong> après trois mois d'usage.</p>
+    </div>
+
+    <section id="comment">
+      <h2>Trois étapes, puis vous n'y pensez plus.</h2>
+      <p class="section-lede">Le travail pénible n'est pas d'écrire la facture. C'est de rappeler à quelqu'un qu'il vous doit de l'argent, poliment, plusieurs fois.</p>
+      <div class="grid grid-3">
+        <article class="card">
+          <span class="num">Étape 1</span>
+          <h3>Vous émettez</h3>
+          <p>Facture conforme en deux minutes, à partir de vos modèles. Mentions légales et numérotation gérées automatiquement.</p>
+        </article>
+        <article class="card">
+          <span class="num">Étape 2</span>
+          <h3>Relance surveille</h3>
+          <p>L'échéance est suivie. Dès le premier jour de retard, la séquence de relance démarre — sans que vous ayez à y penser.</p>
+        </article>
+        <article class="card">
+          <span class="num">Étape 3</span>
+          <h3>Vous êtes payé</h3>
+          <p>Relances espacées, ton qui monte progressivement, mise en demeure prête si nécessaire. Vous n'intervenez qu'en cas de blocage réel.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="tarifs">
+      <h2>Un prix, pas de palier surprise.</h2>
+      <p class="section-lede">Facturation mensuelle, résiliable en un clic depuis votre compte.</p>
+      <div class="plans">
+        <div class="plan">
+          <h3>Solo</h3>
+          <p class="price">12 €<span> / mois</span></p>
+          <p style="color:var(--text-muted);font-size:15px;margin:0">Pour une activité indépendante.</p>
+          <ul>
+            <li>Factures et devis illimités</li>
+            <li>Relances automatiques</li>
+            <li>Export comptable</li>
+          </ul>
+          <a class="btn btn-ghost" href="#essai" style="width:100%">Choisir Solo</a>
+        </div>
+        <div class="plan featured">
+          <span class="tag">Le plus choisi</span>
+          <h3>Solo +</h3>
+          <p class="price">19 €<span> / mois</span></p>
+          <p style="color:var(--text-muted);font-size:15px;margin:0">Quand les impayés deviennent un vrai sujet.</p>
+          <ul>
+            <li>Tout ce qui est inclus dans Solo</li>
+            <li>Mise en demeure générée</li>
+            <li>Suivi de trésorerie prévisionnelle</li>
+            <li>Support par téléphone</li>
+          </ul>
+          <a class="btn btn-primary" href="#essai" style="width:100%">Choisir Solo +</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <h2>Ce qu'on nous demande avant de s'inscrire.</h2>
+      <details>
+        <summary>Mes clients vont-ils voir que c'est automatisé ?</summary>
+        <p>Non. Les relances partent depuis votre adresse, avec vos formulations. Vous relisez et modifiez chaque modèle avant qu'il ne serve.</p>
+      </details>
+      <details>
+        <summary>Que deviennent mes données si j'arrête ?</summary>
+        <p>Vous exportez l'intégralité de vos factures et de vos contacts à tout moment, sans demande préalable. Après résiliation, les données sont conservées 30 jours puis supprimées.</p>
+      </details>
+      <details>
+        <summary>Est-ce conforme à la facturation électronique ?</summary>
+        <p>Les factures émises respectent les mentions obligatoires et la numérotation séquentielle. Le calendrier réglementaire évoluant, nous publions les échéances que nous couvrons sur notre page de conformité.</p>
+      </details>
+      <details>
+        <summary>Et si un client conteste la facture ?</summary>
+        <p>Vous suspendez la séquence en un clic depuis la fiche du client. Aucune relance ne part tant que le litige est ouvert.</p>
+      </details>
+    </section>
+
+    <section class="final" id="essai">
+      <h2>Arrêtez de relancer vous-même.</h2>
+      <p class="section-lede" style="margin-inline:auto">30 jours pour voir si vos délais de paiement bougent. Sans carte bancaire.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary btn-lg" href="#">Commencer l'essai gratuit</a>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <p style="margin:0">© 2026 Relance — page de démonstration, société fictive.</p>
+    <p style="margin:0"><a href="#">Mentions légales</a> · <a href="#">Confidentialité</a></p>
+  </div>
+</footer>
+</body>
+</html>

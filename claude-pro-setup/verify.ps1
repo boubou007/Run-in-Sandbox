@@ -55,7 +55,7 @@ if (Test-Path $set) {
 
 # --- structure
 $missing = @()
-foreach ($d in 'skills','agents','rules','backups','logs','templates') {
+foreach ($d in 'skills','agents','rules','backups','logs','templates','commands') {
     if (-not (Test-Path (Join-Path $ClaudeHome $d))) { $missing += $d }
 }
 if ($missing.Count -eq 0) { Add-Row PASS 'Structure .claude' 'skills, agents, rules, backups, logs, templates' }
@@ -120,6 +120,14 @@ if ($cc) {
 } else {
     Add-Row WARNING 'MCP' 'non verifiable : CLI absente'
 }
+
+# --- commandes slash
+$cmdDir = Join-Path $ClaudeHome 'commands'
+$cmds = @()
+if (Test-Path $cmdDir) { $cmds = @(Get-ChildItem $cmdDir -Filter '*.md' -File) }
+if     ($cmds.Count -ge 3) { Add-Row PASS    'Commandes slash' "$($cmds.Count) commande(s) : /token-audit, /reprise, /sauvegarde-memoire" }
+elseif ($cmds.Count -gt 0) { Add-Row WARNING 'Commandes slash' "$($cmds.Count) commande(s) (3 attendues)" }
+else                       { Add-Row FAIL    'Commandes slash' 'aucune commande detectee' }
 
 # --- memoire
 if (Test-Path (Join-Path $ClaudeHome 'templates\memoire-projet.md')) {

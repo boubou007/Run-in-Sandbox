@@ -102,7 +102,7 @@ Write-Step '2/7  Sauvegarde horodatee'
 
 if (Test-Path $ClaudeHome) {
     $toBackup = @()
-    foreach ($item in 'CLAUDE.md','settings.json','settings.local.json','skills','agents','rules','templates') {
+    foreach ($item in 'CLAUDE.md','settings.json','settings.local.json','skills','agents','rules','templates','commands') {
         $p = Join-Path $ClaudeHome $item
         if (Test-Path $p) { $toBackup += $p }
     }
@@ -128,7 +128,7 @@ if (Test-Path $ClaudeHome) {
 # ---------------------------------------------------------------- 3. structure
 Write-Step '3/7  Creation de la structure'
 
-foreach ($d in 'skills','agents','rules','backups','logs','templates') {
+foreach ($d in 'skills','agents','rules','backups','logs','templates','commands') {
     $p = Join-Path $ClaudeHome $d
     if (Test-Path $p) {
         Write-Info "$d\ existe deja"
@@ -180,6 +180,7 @@ Copy-Tree (Join-Path $PayloadDir 'skills')    (Join-Path $ClaudeHome 'skills')  
 Copy-Tree (Join-Path $PayloadDir 'agents')    (Join-Path $ClaudeHome 'agents')    'agents'
 Copy-Tree (Join-Path $PayloadDir 'rules')     (Join-Path $ClaudeHome 'rules')     'rules'
 Copy-Tree (Join-Path $PayloadDir 'templates') (Join-Path $ClaudeHome 'templates') 'templates'
+Copy-Tree (Join-Path $PayloadDir 'commands')  (Join-Path $ClaudeHome 'commands')  'commands'
 
 # ---------------------------------------------------------------- 5. CLAUDE.md
 Write-Step '5/7  CLAUDE.md global'
