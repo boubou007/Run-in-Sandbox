@@ -25,6 +25,22 @@ Ce qui a donc été fait :
 Ce que vous devez faire : lancer `install.ps1`. C'est la seule étape qui ne
 pouvait pas être exécutée à votre place.
 
+### Limite à connaître : les scripts PowerShell n'ont pas pu être exécutés
+
+**PowerShell n'est pas installé dans l'environnement de préparation.** Les scripts
+`.ps1` ont donc été :
+
+- écrits en miroir exact des scripts `.sh`, eux **exécutés et testés** (installation,
+  relance à vide, test négatif d'échec de sauvegarde) ;
+- relus ligne à ligne, avec correction d'un bug réel de portée de variable
+  (voir « Revue de sécurité » plus bas) ;
+- contrôlés structurellement (équilibre des accolades, parenthèses, crochets,
+  chaînes et commentaires).
+
+Ce n'est **pas** équivalent à une exécution. D'où la consigne : **lancez d'abord
+`.\install.ps1 -DryRun`**. En simulation, le script n'écrit rien et vous verrez
+immédiatement s'il se comporte correctement chez vous.
+
 ---
 
 ## Installation (Windows)
@@ -80,6 +96,29 @@ Puis **redémarrez Claude Code** pour charger la configuration.
 - **Validation JSON avant écriture** : en cas d'erreur, `settings.json` n'est pas
   touché et la sauvegarde reste intacte.
 - **Idempotent** : relançable sans dommage.
+- **Arrêt si la sauvegarde échoue** : si le dossier de sauvegarde ne peut pas être
+  créé, si la copie échoue ou si le dossier est vide après copie, le script
+  s'arrête avec le code 1 **avant toute modification**. Vérifié par test négatif.
+- **Sauvegarde à accès restreint** : le dossier est créé en `0700` (Linux/macOS)
+  ou avec une ACL limitée à votre compte (Windows), car il peut contenir
+  `.claude.json`, qui porte des données de compte.
+
+---
+
+## Revue de sécurité des installateurs
+
+Les scripts s'exécutent sur votre machine et manipulent vos fichiers. Ils ont été
+audités ; trois défauts ont été trouvés et corrigés.
+
+| Défaut | Gravité | Correction |
+|---|---|---|
+| `install.sh` : échec de sauvegarde silencieux (`2>/dev/null`, aucun contrôle). La configuration pouvait être modifiée **sans sauvegarde**, ce qui annulait la garantie principale du script. | Élevée | Contrôle du code de retour de `mkdir` et `cp`, plus vérification que le dossier n'est pas vide. Arrêt immédiat sinon. Vérifié par test négatif. |
+| `install.ps1` : `Copy-Tree` passait un bloc de script à `Invoke-Action`, qui l'exécutait via `& $Action`. Le bloc y référençait `$_`, variable **automatique de pipeline** non liée hors de son pipeline : la copie des Skills et agents pouvait ne rien copier. | Élevée | L'indirection par bloc de script a été supprimée. La copie se fait dans une boucle `foreach` explicite, avec vérification de l'existence du fichier après copie. |
+| Dossier de sauvegarde créé en `0755` alors qu'il contient `.claude.json` (données de compte). Sur un poste partagé, son contenu était listable. | Moyenne | `chmod 700` sur Linux/macOS ; ACL sans héritage, limitée au compte courant, sur Windows. |
+
+Aucun secret n'est écrit, lu ou transmis par ces scripts. Aucune connexion réseau
+n'est établie par `install.ps1` / `install.sh` — seuls `setup-plugins` et
+`setup-mcp` appellent la CLI `claude`, qui gère elle-même ses accès.
 
 ---
 

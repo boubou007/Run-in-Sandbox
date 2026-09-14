@@ -71,9 +71,25 @@ if [ -d "$CLAUDE_HOME" ]; then
     if [ "$DRY_RUN" = 1 ]; then
       info "SIMULATION : sauvegarde de ${#TO_BACKUP[@]} element(s) vers $BACKUP_DIR"
     else
-      mkdir -p "$BACKUP_DIR"
-      cp -R "${TO_BACKUP[@]}" "$BACKUP_DIR"/ 2>/dev/null
-      ok "Sauvegarde creee : $BACKUP_DIR"
+      if ! mkdir -p "$BACKUP_DIR"; then
+        fail "Impossible de creer le dossier de sauvegarde : $BACKUP_DIR"
+        fail "ARRET : aucune modification ne sera faite sans sauvegarde prealable."
+        exit 1
+      fi
+      # La sauvegarde peut contenir .claude.json (donnees de compte) : acces restreint.
+      chmod 700 "$BACKUP_DIR"
+      if ! cp -R "${TO_BACKUP[@]}" "$BACKUP_DIR"/; then
+        fail "La sauvegarde a echoue."
+        fail "ARRET : aucune modification ne sera faite sans sauvegarde prealable."
+        exit 1
+      fi
+      # Verifier que la sauvegarde contient bien quelque chose.
+      if [ -z "$(ls -A "$BACKUP_DIR" 2>/dev/null)" ]; then
+        fail "Le dossier de sauvegarde est vide apres copie."
+        fail "ARRET : aucune modification ne sera faite sans sauvegarde prealable."
+        exit 1
+      fi
+      ok "Sauvegarde creee et verifiee : $BACKUP_DIR"
       BACKED_UP=1
     fi
     info "Elements sauvegardes : ${#TO_BACKUP[@]}"

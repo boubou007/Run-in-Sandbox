@@ -110,13 +110,44 @@ if (Test-Path $ClaudeHome) {
     if (Test-Path $globalJson) { $toBackup += $globalJson }
 
     if ($toBackup.Count -gt 0) {
-        Invoke-Action "Sauvegarde vers $BackupDir" {
-            New-Item -ItemType Directory -Path $BackupDir -Force | Out-Null
-            foreach ($p in $toBackup) {
-                Copy-Item $p -Destination $BackupDir -Recurse -Force
+        if ($DryRun) {
+            Write-Info "SIMULATION : sauvegarde de $($toBackup.Count) element(s) vers $BackupDir"
+        } else {
+            try {
+                New-Item -ItemType Directory -Path $BackupDir -Force | Out-Null
+
+                # La sauvegarde peut contenir .claude.json (donnees de compte).
+                # On retire l'heritage et on ne laisse que l'utilisateur courant.
+                try {
+                    $acl = Get-Acl $BackupDir
+                    $acl.SetAccessRuleProtection($true, $false)
+                    $me = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+                    $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(
+                        $me, 'FullControl',
+                        'ContainerInherit,ObjectInherit', 'None', 'Allow')
+                    $acl.AddAccessRule($rule)
+                    Set-Acl -Path $BackupDir -AclObject $acl
+                } catch {
+                    Write-Warn2 "Permissions de la sauvegarde non restreintes : $($_.Exception.Message)"
+                }
+
+                foreach ($item in $toBackup) {
+                    Copy-Item -LiteralPath $item -Destination $BackupDir -Recurse -Force
+                }
+            } catch {
+                Write-Err2 "La sauvegarde a echoue : $($_.Exception.Message)"
+                Write-Err2 "ARRET : aucune modification ne sera faite sans sauvegarde prealable."
+                exit 1
             }
+
+            if (-not (Test-Path $BackupDir) -or
+                @(Get-ChildItem -LiteralPath $BackupDir -Force).Count -eq 0) {
+                Write-Err2 "Le dossier de sauvegarde est vide apres copie."
+                Write-Err2 "ARRET : aucune modification ne sera faite sans sauvegarde prealable."
+                exit 1
+            }
+            Write-Ok "Sauvegarde creee et verifiee : $BackupDir"
         }
-        if (-not $DryRun) { Write-Ok "Sauvegarde creee : $BackupDir" }
         Write-Info "Elements sauvegardes : $($toBackup.Count)"
     } else {
         Write-Info 'Rien a sauvegarder (aucune configuration existante)'
@@ -145,37 +176,43 @@ function Copy-Tree {
     param([string]$Source, [string]$Target, [string]$Label)
     if (-not (Test-Path $Source)) { Write-Warn2 "Source absente : $Source"; return }
 
+    # La copie est faite directement, sans passer par un scriptblock : $_ est la
+    # variable automatique de pipeline et ne serait pas liee dans un bloc execute
+    # depuis une autre fonction.
     $added = 0; $kept = 0; $replaced = 0
-    Get-ChildItem $Source -Recurse -File | ForEach-Object {
-        $rel = $_.FullName.Substring($Source.Length).TrimStart('\','/')
-        $dst = Join-Path $Target $rel
-        $dstDir = Split-Path $dst -Parent
+    $files = @(Get-ChildItem -LiteralPath $Source -Recurse -File)
 
-        if (Test-Path $dst) {
-            if ($Force) {
-                Invoke-Action "Remplacement $Label\$rel" {
-                    if (-not (Test-Path $dstDir)) { New-Item -ItemType Directory -Path $dstDir -Force | Out-Null }
-                    Copy-Item $_.FullName -Destination $dst -Force
-                }
-                $script:replacedCount++; $replaced++
-            } else {
-                $kept++
-            }
+    foreach ($file in $files) {
+        $rel    = $file.FullName.Substring($Source.Length).TrimStart('\','/')
+        $dst    = Join-Path $Target $rel
+        $dstDir = Split-Path $dst -Parent
+        $exists = Test-Path -LiteralPath $dst
+
+        if ($exists -and -not $Force) { $kept++; continue }
+
+        $verbe = if ($exists) { 'Remplacement' } else { 'Ajout' }
+
+        if ($DryRun) {
+            Write-Info "SIMULATION : $verbe $Label\$rel"
         } else {
-            Invoke-Action "Ajout $Label\$rel" {
-                if (-not (Test-Path $dstDir)) { New-Item -ItemType Directory -Path $dstDir -Force | Out-Null }
-                Copy-Item $_.FullName -Destination $dst -Force
+            if (-not (Test-Path -LiteralPath $dstDir)) {
+                New-Item -ItemType Directory -Path $dstDir -Force | Out-Null
             }
-            $added++
+            Copy-Item -LiteralPath $file.FullName -Destination $dst -Force
+            if (-not (Test-Path -LiteralPath $dst)) {
+                Write-Err2 "Copie echouee : $Label\$rel"
+                continue
+            }
         }
+        if ($exists) { $replaced++ } else { $added++ }
     }
+
     Write-Ok "$Label : $added ajoute(s), $replaced remplace(s), $kept conserve(s)"
     if ($kept -gt 0 -and -not $Force) {
         Write-Info "  $kept fichier(s) existant(s) conserve(s). Relancez avec -Force pour les remplacer."
     }
 }
 
-$script:replacedCount = 0
 Copy-Tree (Join-Path $PayloadDir 'skills')    (Join-Path $ClaudeHome 'skills')    'skills'
 Copy-Tree (Join-Path $PayloadDir 'agents')    (Join-Path $ClaudeHome 'agents')    'agents'
 Copy-Tree (Join-Path $PayloadDir 'rules')     (Join-Path $ClaudeHome 'rules')     'rules'
